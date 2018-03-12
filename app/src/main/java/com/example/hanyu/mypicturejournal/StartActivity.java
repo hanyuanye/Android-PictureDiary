@@ -34,7 +34,7 @@ public class StartActivity extends AppCompatActivity {
     Intent takePhotoIntent;
     String filePath;
     public static String EMOTION_KEY;
-    public static String FACE_KEY = "7ff4f1db4d334ca6bc75fbaacae7a82f";
+    public static String FACE_KEY = "(Insert API Key)"; //Insert Personal API key here
     public static String FACE_API_ENDPOINT = "https://westcentralus.api.cognitive.microsoft.com/face/v1.0";
     public static final String FileName = "MyPictureJournal";
 
