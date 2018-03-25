@@ -1,8 +1,13 @@
 <resources>
     <string name="app_name">My Picture Journal</string>
     <string name="button">Take Picture</string>
-    <string name ="stopPictures">Stop Service</string>
-    <string name = "emotion_subscription_key">6b071abacfc74d69b35f0161f487c572</string>
-    <string name = "face_subscription_key">7ff4f1db4d334ca6bc75fbaacae7a82f</string>
-    <string name = "face_api_endpoint">https://westcentralus.api.cognitive.microsoft.com/face/v1.0</string>
+    <string name="stopPictures">Stop Service</string>
+    <string name="emotion_subscription_key">6b071abacfc74d69b35f0161f487c572</string>
+    <string name="face_subscription_key">7ff4f1db4d334ca6bc75fbaacae7a82f</string>
+    <string name="face_api_endpoint">https://westcentralus.api.cognitive.microsoft.com/face/v1.0</string>
+    <string-array name="spinner_array">
+        <item>Date</item>
+        <item>Emotion</item>
+        <item>Favourite</item>
+    </string-array>
 </resources>

@@ -1,6 +1,5 @@
 package com.example.hanyu.mypicturejournal;
 
-import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.graphics.Bitmap;
 
@@ -21,38 +20,33 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
+import static com.example.hanyu.mypicturejournal.StartActivity.EMOTION_ARRAY;
 import static com.example.hanyu.mypicturejournal.StartActivity.FACE_API_ENDPOINT;
 import static com.example.hanyu.mypicturejournal.StartActivity.FACE_KEY;
+import static com.example.hanyu.mypicturejournal.StartActivity.MONTHS_ARRAY;
 
 
 /**
  * Created by hanyu on 3/9/2018.
  */
 
-public class EmotionClient {
-    private static final int ANGER = 0;
-    private static final int CONTEMPT = 1;
-    private static final int DISGUST = 2;
-    private static final int FEAR = 3;
-    private static final int HAPPINESS = 4;
-    private static final int NEUTRAL = 5;
-    private static final int SADNESS = 6;
-    private static final int SURPRISE = 7;
-
+public class FaceClientHelper {
     private static String TAG = "tag";
     static String DBTAG = "dbtag";
     private static int imageCounter = 0;
     private Bitmap mBitmap;
     private String imagePath;
     private FaceServiceClient client;
-    private ImageDatabase db;
+    private Context mContext;
 
-    public EmotionClient(Context context) {
+    public FaceClientHelper(Context context) {
         if (client == null) {
             client = new FaceServiceRestClient(FACE_API_ENDPOINT, FACE_KEY);
         }
-        db = Room.databaseBuilder(context, ImageDatabase.class, "image-db").build();
+        mContext = context;
     }
 
     public void recognizeImage(String path) {
@@ -108,7 +102,7 @@ public class EmotionClient {
         @Override
         protected void onPostExecute(Face[] result) {
             for (Face face : result) {
-                parseJson(face);
+                parseClientCallResult(face);
             }
         }
     }
@@ -119,7 +113,7 @@ public class EmotionClient {
         return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 
-    private void parseJson(Face face) {
+    private void parseClientCallResult(Face face) {
         Emotion emotion = face.faceAttributes.emotion;
         double emotionArray[] =  {
             emotion.anger,
@@ -139,38 +133,12 @@ public class EmotionClient {
                 emotionIndex = i;
             }
         }
-        String emotionString;
-        switch (emotionIndex) {
-            case ANGER:
-                emotionString = "Angry";
-                break;
-            case CONTEMPT:
-                emotionString = "Contempt";
-                break;
-            case DISGUST:
-                emotionString = "Disgust";
-                break;
-            case FEAR:
-                emotionString = "Fear";
-                break;
-            case HAPPINESS:
-                emotionString = "Happiness";
-                break;
-            case NEUTRAL:
-                emotionString = "Neutral";
-                break;
-            case SADNESS:
-                emotionString = "Sadness";
-                break;
-            case SURPRISE:
-                emotionString = "Surprise";
-                break;
-            default:
-                emotionString = "";
-                break;
-        }
+        String emotionString = EMOTION_ARRAY[emotionIndex-1];
+        GregorianCalendar calendar = new GregorianCalendar();
+        String month = MONTHS_ARRAY[calendar.get(calendar.MONTH)];
+        int day = calendar.get(Calendar.DATE);
 
-        Image image = new Image(imagePath, emotionString, "false", 10, 10);
+        Image image = new Image(imagePath, emotionString, "false", month, day);
         new DatabaseAsync().execute(image);
 
         Log.d(TAG, Integer.toString(emotionIndex));
@@ -180,7 +148,7 @@ public class EmotionClient {
         @Override
         protected Void doInBackground(Image... image) {
             Log.d(DBTAG, image[0].getFilePath() + "  " + image[0].getEmotion() + "  " + image[0].getFavourite());
-            db.daoAccessImage().insertOneImage(image[0]);
+            ImageDatabase.getInstance(mContext).daoAccessImage().insertOneImage(image[0]);
             return null;
         }
     }

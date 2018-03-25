@@ -1,9 +1,5 @@
 package com.example.hanyu.mypicturejournal;
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.Context;
-import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -32,22 +28,93 @@ import java.util.Arrays;
 class Camera{
     private static final String TAG = "Tag";
     private static final int CAMERA_LENS_CHOICE = CameraCharacteristics.LENS_FACING_BACK;
-    private CameraDevice cameraDevice;
-    private CameraCaptureSession cameraCaptureSession;
-    private ImageReader imageReader;
-    private String filePath;
+    private CameraDevice mCameraDevice;
+    private CameraCaptureSession mCameraCaptureSession;
+    private ImageReader mImageReader;
+    private String mFilePath;
+
+    void startCamera(CameraManager cameraManager, String filePath) {
+        this.mFilePath = filePath;
+        try {
+            String pickedCamera = getCamera(cameraManager);
+            cameraManager.openCamera(pickedCamera, cameraStateCallBack, null); //This would be checked in the initial activity which starts the service.
+            mImageReader = ImageReader.newInstance(1920, 1088, ImageFormat.JPEG, 2);
+            mImageReader.setOnImageAvailableListener(onImageAvailableListener, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private String getCamera(CameraManager manager) {
+        try {
+            for (String cameraId : manager.getCameraIdList()) {
+                CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+                if (characteristics.get(CameraCharacteristics.LENS_FACING) != CAMERA_LENS_CHOICE) {
+                    return cameraId;
+                }
+            }
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    void closeCamera() {
+        try {
+            if (mCameraCaptureSession != null) {
+                mCameraCaptureSession.abortCaptures();
+                mCameraCaptureSession.close();
+            }
+        } catch (CameraAccessException e) {
+            Log.e(TAG, e.getMessage());
+        }
+        Log.d(TAG, "closed camera");
+        mCameraDevice.close();
+    }
+
+    private void processImage(Image image) {
+        Log.d(TAG, "processing image");
+        ByteBuffer buffer;
+        byte[] bytes;
+        File file = new File(mFilePath);
+        FileOutputStream output = null;
+
+        if(image.getFormat() == ImageFormat.JPEG) {
+            buffer = image.getPlanes()[0].getBuffer();
+            bytes = new byte[buffer.remaining()]; // makes byte array large enough to hold image
+            buffer.get(bytes); // copies image from buffer to byte array
+            try {
+                output = new FileOutputStream(file);
+                output.write(bytes);    // write the byte array to file
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.d(TAG, e.getMessage());
+            } finally {
+                image.close(); // close this to free up buffer for other images
+                if (null != output) {
+                    try {
+                        output.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Log.d(TAG, e.getMessage());
+                    }
+                }
+            }
+        }
+    }
 
     private CameraDevice.StateCallback cameraStateCallBack = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(@NonNull CameraDevice camera) {
             Log.d(TAG, "Camera Opened");
-            cameraDevice = camera;
+            mCameraDevice = camera;
             startCaptureSession();
-
         }
         @Override
         public void onClosed(@NonNull CameraDevice camera) {
-
         }
 
         @Override
@@ -65,17 +132,16 @@ class Camera{
     private CameraCaptureSession.StateCallback sessionStateCallback = new CameraCaptureSession.StateCallback() {
         @Override
         public void onReady(@NonNull CameraCaptureSession session) {
-
         }
 
         @Override
         public void onConfigured(@NonNull CameraCaptureSession session) {
-            if (cameraDevice == null) {
+            if (mCameraDevice == null) {
                 return;
             }
-            cameraCaptureSession = session;
+            mCameraCaptureSession = session;
             try {
-                cameraCaptureSession.setRepeatingRequest(createCaptureRequest(), null, null);
+                mCameraCaptureSession.setRepeatingRequest(createCaptureRequest(), null, null);
             } catch (CameraAccessException e) {
                 e.printStackTrace();
             }
@@ -85,7 +151,7 @@ class Camera{
                 e.printStackTrace();
             }
             try {
-                cameraCaptureSession.capture(createCaptureRequest(), captureCallback, null);
+                mCameraCaptureSession.capture(createCaptureRequest(), captureCallback, null);
             } catch (CameraAccessException e) {
                 e.printStackTrace();
             }
@@ -93,7 +159,6 @@ class Camera{
 
         @Override
         public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
-
         }
     };
 
@@ -127,56 +192,9 @@ class Camera{
         }
     };
 
-    private void processImage(Image image) {
-        Log.d(TAG, "processing image");
-        ByteBuffer buffer;
-        byte[] bytes;
-        File file = new File(filePath);
-        FileOutputStream output = null;
-
-        if(image.getFormat() == ImageFormat.JPEG) {
-            buffer = image.getPlanes()[0].getBuffer();
-            bytes = new byte[buffer.remaining()]; // makes byte array large enough to hold image
-            buffer.get(bytes); // copies image from buffer to byte array
-            try {
-                output = new FileOutputStream(file);
-                output.write(bytes);    // write the byte array to file
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-                Log.d(TAG, e.getMessage());
-            } finally {
-                image.close(); // close this to free up buffer for other images
-                if (null != output) {
-                    try {
-                        output.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        Log.d(TAG, e.getMessage());
-                    }
-                }
-            }
-        }
-    }
-
-    private String getCamera(CameraManager manager) {
-        try {
-            for (String cameraId : manager.getCameraIdList()) {
-                CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
-                if (characteristics.get(CameraCharacteristics.LENS_FACING) != CAMERA_LENS_CHOICE) {
-                    return cameraId;
-                }
-            }
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     private void startCaptureSession() {
         try {
-            cameraDevice.createCaptureSession(Arrays.asList(imageReader.getSurface()), sessionStateCallback, null);
+            mCameraDevice.createCaptureSession(Arrays.asList(mImageReader.getSurface()), sessionStateCallback, null);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -184,37 +202,12 @@ class Camera{
 
     private CaptureRequest createCaptureRequest() {
         try {
-            CaptureRequest.Builder builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
-            builder.addTarget(imageReader.getSurface());
+            CaptureRequest.Builder builder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+            builder.addTarget(mImageReader.getSurface());
             return builder.build();
         } catch (CameraAccessException e) {
             Log.e(TAG, e.getMessage());
             return null;
         }
-    }
-
-    void startCamera(CameraManager cameraManager, String filePath) {
-        this.filePath = filePath;
-        try {
-            String pickedCamera = getCamera(cameraManager);
-            cameraManager.openCamera(pickedCamera, cameraStateCallBack, null); //This would be checked in the initial activity which starts the service.
-            imageReader = ImageReader.newInstance(1920, 1088, ImageFormat.JPEG, 2);
-            imageReader.setOnImageAvailableListener(onImageAvailableListener, null);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
-    void closeCamera() {
-        try {
-            if (cameraCaptureSession != null) {
-                cameraCaptureSession.abortCaptures();
-                cameraCaptureSession.close();
-            }
-        } catch (CameraAccessException e) {
-            Log.e(TAG, e.getMessage());
-        }
-        Log.d(TAG, "closed camera");
-        cameraDevice.close();
     }
 }

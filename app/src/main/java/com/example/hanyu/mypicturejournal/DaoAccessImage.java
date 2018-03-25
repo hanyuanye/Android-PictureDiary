@@ -16,18 +16,21 @@ public interface DaoAccessImage {
     @Insert
     void insertOneImage(Image image);
 
-    @Query("Select * FROM Image WHERE month =:queried_month AND day =:queried_day")
-    List<Image> fetchImagesFromDate(int queried_month, int queried_day);
+    @Query("Select * FROM Image WHERE mMonth =:queried_month AND mDay =:queried_day")
+    List<Image> fetchImagesFromDate(String queried_month, int queried_day);
 
-    @Query("Select * FROM Image WHERE emotion =:queried_emotion")
+    @Query("Select * FROM Image WHERE mEmotion =:queried_emotion")
     List<Image> fetchImagesFromEmotion(String queried_emotion);
 
-    @Query("Select * FROM Image WHERE favourite =:TRUE")
-    List<Image> fetchFavouriteImages(String TRUE);
+    @Query("Select * FROM Image WHERE mFavourite =:TRUE")
+    List<Image> fetchImagesFromFavourites(String TRUE);
 
     @Update()
     void updateImage(Image image);
 
     @Delete()
     void deleteImage(Image image);
+
+    @Query("DELETE FROM Image")
+    void deleteAll();
 }

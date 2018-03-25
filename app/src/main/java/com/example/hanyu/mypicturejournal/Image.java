@@ -8,68 +8,61 @@ import android.arch.persistence.room.PrimaryKey;
  */
 @Entity
 public class Image {
+    @PrimaryKey(autoGenerate =  true)
+    public int SQLiteKey; //Only for SQLite database, not used anywhere else
+
+    private String mFilePath;
+    private String mEmotion;
+    private String mFavourite;
+    private String mMonth;
+    private int mDay;
+
+    //All getters and setters are for SQLite database and accessed on a different level of abstraction
     public String getFilePath() {
-        return filePath;
+        return mFilePath;
     }
 
     public void setFilePath(String filePath) {
-        this.filePath = filePath;
+        this.mFilePath = filePath;
     }
 
     public String getEmotion() {
-        return emotion;
+        return mEmotion;
     }
 
     public void setEmotion(String emotion) {
-        this.emotion = emotion;
+        this.mEmotion = emotion;
     }
 
     public String getFavourite() {
-        return favourite;
+        return mFavourite;
     }
 
     public void setFavourite(String favourite) {
-        this.favourite = favourite;
+        this.mFavourite = favourite;
     }
 
-    public int getMonth() {
-        return month;
+    public String getMonth() {
+        return mMonth;
     }
 
-    public void setMonth(int month) {
-        this.month = month;
+    public void setMonth(String mMonth) {
+        this.mMonth = mMonth;
     }
 
     public int getDay() {
-        return day;
+        return mDay;
     }
 
-    public void setDay(int day) {
-        this.day = day;
+    public void setDay(int mDay) {
+        this.mDay = mDay;
     }
 
-    public int getKey() {
-        return key;
+    public Image(String filePath, String emotion, String favourite, String month, int day) {
+        this.mFilePath = filePath;
+        this.mEmotion = emotion;
+        this.mFavourite = favourite;
+        this.mMonth = month;
+        this.mDay = day;
     }
-
-    public void setKey(int key) {
-        this.key = key;
-    }
-
-    public Image(String filePath, String emotion, String favourite, int month, int day) {
-        this.filePath = filePath;
-        this.emotion = emotion;
-        this.favourite = favourite;
-        this.month = month;
-        this.day = day;
-    }
-
-    @PrimaryKey(autoGenerate =  true)
-    private int key;
-    private String filePath;
-    private String emotion;
-    private String favourite;
-    private int month;
-    private int day;
-
 }

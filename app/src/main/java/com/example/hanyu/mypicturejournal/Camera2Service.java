@@ -16,23 +16,23 @@ import android.util.Log;
 
 
 public class Camera2Service extends Service {
-    protected static final String TAG = "Tag";
-    protected boolean takePictureWhenScreenOn = true;
-    protected CameraManager manager;
-    protected int imageCounter = 0;
-    protected String filePath;
-    protected PowerManager pm;
-    private BroadcastReceiver receiver;
-    protected EmotionClient client;
+    private static final String TAG = "Tag";
+    private boolean takePictureWhenScreenOn = true;
+    private CameraManager mCameraManager;
+    private int mImageCounter = 0;
+    private  String mFilePath;
+    private PowerManager mPowerManager;
+    private BroadcastReceiver mReceiver;
+    private FaceClientHelper mFaceClient;
 
-    protected Camera camera;
+    private Camera mCamera;
 
     private Handler handler;
     private int timer = 5000;
     private Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            if (pm.isInteractive()) {
+            if (mPowerManager.isInteractive()) {
                 callStartCamera();
             } else {
                 takePictureWhenScreenOn = true;
@@ -48,16 +48,16 @@ public class Camera2Service extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        client = new EmotionClient(this);
+        mFaceClient = new FaceClientHelper(this);
 
-        manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-        pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        receiver = new BroadcastReceiver() {
+        mCameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        mPowerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        mReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
                 if (action.equals("android.os.action.DEVICE_IDLE_MODE_CHANGED")){
-                    if (pm.isInteractive() && takePictureWhenScreenOn) {
+                    if (mPowerManager.isInteractive() && takePictureWhenScreenOn) {
                         callStartCamera();
                         takePictureWhenScreenOn = false;
                     }
@@ -65,19 +65,19 @@ public class Camera2Service extends Service {
             }
         };
         final IntentFilter ScreenIdleFilter = new IntentFilter();
-        this.registerReceiver(receiver, ScreenIdleFilter);
-        filePath = intent.getStringExtra("FilePath");
+        this.registerReceiver(mReceiver, ScreenIdleFilter);
+        mFilePath = intent.getStringExtra("FilePath");
         startHandler();
 
         return START_STICKY;
     }
 
     private void callStartCamera() {
-        camera = new Camera();
-        imageCounter++;
-        camera.startCamera(manager, filePath + Integer.toString(imageCounter) + ".jpeg");
-        if (imageCounter > 0) {
-            client.recognizeImage(filePath + Integer.toString(imageCounter - 1) + ".jpeg");
+        mCamera = new Camera();
+        mImageCounter++;
+        mCamera.startCamera(mCameraManager, mFilePath + Integer.toString(mImageCounter) + ".jpeg");
+        if (mImageCounter > 0) {
+            mFaceClient.recognizeImage(mFilePath + Integer.toString(mImageCounter - 1) + ".jpeg");
         }
     }
 
@@ -88,10 +88,10 @@ public class Camera2Service extends Service {
 
     @Override
     public void onDestroy() {
-        camera.closeCamera();
-        if (receiver != null) {
-            unregisterReceiver(receiver);
-            receiver = null;
+        mCamera.closeCamera();
+        if (mReceiver != null) {
+            unregisterReceiver(mReceiver);
+            mReceiver = null;
         }
         super.onDestroy();
         Log.d(TAG, "Closing Session");
