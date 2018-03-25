@@ -16,13 +16,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
-import java.util.concurrent.TimeUnit;
-
 
 public class StartActivity extends AppCompatActivity {
     public static final String[] MONTHS_ARRAY = {
@@ -47,10 +43,6 @@ public class StartActivity extends AppCompatActivity {
             "Neutral",
             "Sadness",
             "Surprise"
-    };
-    private static final String[] SPINNER_ARRAY = {
-            "Date",
-            "Emotion"
     };
     public static final String FACE_KEY = "7ff4f1db4d334ca6bc75fbaacae7a82f";
     public static final String FACE_API_ENDPOINT = "https://westcentralus.api.cognitive.microsoft.com/face/v1.0";

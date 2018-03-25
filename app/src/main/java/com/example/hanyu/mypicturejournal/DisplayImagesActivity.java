@@ -1,12 +1,10 @@
 package com.example.hanyu.mypicturejournal;
 
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.ListView;
-
 
 import java.util.ArrayList;
 import java.util.Arrays;
